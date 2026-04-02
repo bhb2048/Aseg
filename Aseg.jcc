@@ -1,0 +1,244 @@
+jx_browser_data 84
+# project tree
+0 "root"
+T
+1 "Aseg"
+T
+2 "Aseg.cc"
+F
+"./Aseg.cc"
+T
+2 "SegImage3D.cc"
+F
+"./SegImage3D.cc"
+T
+2 "ImgView.cc"
+F
+"./ImgView.cc"
+T
+2 "MeshView.cc"
+F
+"./MeshView.cc"
+T
+2 "ThresholdFilter.cc"
+F
+"./ThresholdFilter.cc"
+T
+2 "EdgeFilter.cc"
+F
+"./EdgeFilter.cc"
+T
+2 "SetBubbles.cc"
+F
+"./SetBubbles.cc"
+T
+2 "SetSeeds.cc"
+F
+"./SetSeeds.cc"
+T
+2 "SegmentationDlog.cc"
+F
+"./SegmentationDlog.cc"
+T
+2 "ImageIntensity.cc"
+F
+"./ImageIntensity.cc"
+T
+2 "FibrosisHistogram.cc"
+F
+"./FibrosisHistogram.cc"
+T
+2 "ModelReg.cc"
+F
+"./ModelReg.cc"
+F
+T
+1 "UI"
+T
+2 "AddWallUI.cc"
+F
+"./UI/AddWallUI.cc"
+T
+2 "AsegUI.cc"
+F
+"./UI/AsegUI.cc"
+T
+2 "ColorLabelDlog.cc"
+F
+"./UI/ColorLabelDlog.cc"
+T
+2 "FibrosisHistogramUI.cc"
+F
+"./UI/FibrosisHistogramUI.cc"
+T
+2 "ImgWindowUI.cc"
+F
+"./UI/ImgWindowUI.cc"
+T
+2 "MeshWindowUI.cc"
+F
+"./UI/MeshWindowUI.cc"
+T
+2 "SetBubblesUI.cc"
+F
+"./UI/SetBubblesUI.cc"
+T
+2 "SegmentationUI.cc"
+F
+"./UI/SegmentationUI.cc"
+T
+2 "SnakeParametersUI.cc"
+F
+"./UI/SnakeParametersUI.cc"
+T
+2 "ThresholdFilterUI.cc"
+F
+"./UI/ThresholdFilterUI.cc"
+F
+T
+1 "LevelSet"
+T
+2 "SegAdvectionFieldImageFilter.h"
+F
+"./LevelSet/SegAdvectionFieldImageFilter.h"
+T
+2 "SegAdvectionFieldImageFilter.txx"
+F
+"./LevelSet/SegAdvectionFieldImageFilter.txx"
+T
+2 "SegLevelSetDriver.h"
+F
+"./LevelSet/SegLevelSetDriver.h"
+T
+2 "SegLevelSetDriver.txx"
+F
+"./LevelSet/SegLevelSetDriver.txx"
+T
+2 "SegLevelSetFunction.h"
+F
+"./LevelSet/SegLevelSetFunction.h"
+T
+2 "SegLevelSetFunction.txx"
+F
+"./LevelSet/SegLevelSetFunction.txx"
+T
+2 "LevelSetExtensionFilter.h"
+F
+"./LevelSet/LevelSetExtensionFilter.h"
+T
+2 "SignedDistanceFilter.h"
+F
+"./LevelSet/SignedDistanceFilter.h"
+T
+2 "SignedDistanceFilter.txx"
+F
+"./LevelSet/SignedDistanceFilter.txx"
+T
+2 "SegParameters.h"
+F
+"./LevelSet/SegParameters.h"
+T
+2 "SegParameters.cc"
+F
+"./LevelSet/SegParameters.cc"
+F
+T
+1 "Mesh"
+T
+2 "MeshOptions.cc"
+F
+"./Mesh/MeshOptions.cc"
+T
+2 "MeshObject.cc"
+F
+"./Mesh/MeshObject.cc"
+T
+2 "LevelSetMeshPipeline.cc"
+F
+"./Mesh/LevelSetMeshPipeline.cc"
+T
+2 "ImageMeshPipeline.cc"
+F
+"./Mesh/ImageMeshPipeline.cc"
+T
+2 "VTKMeshPipeline.cc"
+F
+"./Mesh/VTKMeshPipeline.cc"
+F
+T
+1 "ITK"
+T
+2 "Common.h"
+F
+"../libs/ITK/Common/Common.h"
+T
+2 "ImageWrapper3D.h"
+F
+"../libs/ITK/ImageWrapper/ImageWrapper3D.h"
+T
+2 "GreyImageWrapper3D.h"
+F
+"../libs/ITK/ImageWrapper/GreyImageWrapper3D.h"
+T
+2 "SpeedImageWrapper3D.h"
+F
+"../libs/ITK/ImageWrapper/SpeedImageWrapper3D.h"
+T
+2 "SpeedColorMap.h"
+F
+"../libs/ITK/ImageWrapper/SpeedColorMap.h"
+T
+2 "ItkImage3D.cc"
+F
+"../libs/ITK/ItkImage/ItkImage3D.cc"
+T
+2 "ItkImageIO.cc"
+F
+"../libs/ITK/ItkImage/ItkImageIO.cc"
+T
+2 "ThresholdSettings.h"
+F
+"../libs/ITK/Filters/ThresholdSettings.h"
+T
+2 "ThresholdSettings.cc"
+F
+"../libs/ITK/Filters/ThresholdSettings.cc"
+T
+2 "SmoothBinaryThresholdImageFilter.h"
+F
+"../libs/ITK/Filters/SmoothBinaryThresholdImageFilter.h"
+T
+2 "SmoothBinaryThresholdImageFilter.txx"
+F
+"../libs/ITK/Filters/SmoothBinaryThresholdImageFilter.txx"
+F
+T
+1 "Other"
+T
+2 "OpenGLTexture.cc"
+F
+"../libs/GLUtilLib/OpenGLTexture.cc"
+T
+2 "FunctionPlot2d.h"
+F
+"../libs/PlotlibFl/FunctionPlot2d.h"
+T
+2 "FunctionPlot2d.cc"
+F
+"../libs/PlotlibFl/FunctionPlot2d.cc"
+F
+F
+# tasks
+4
+"make depend"
+F
+# build settings
+0
+T
+"a.out"
+""
+"make -k all"
+# search paths
+F
+# C preprocessor
+F

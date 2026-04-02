@@ -1,0 +1,30 @@
+#
+#	Modified:
+# 22-nov-13 added -M to avoid LevelSet/SegAdvectionFieldImageFilter.h error, see 2013-11-22
+# 18-nov-17 add -std=c++11  need for VTK using 'nullptr'
+# 31-jan-18 add -I/usr/local/cuda-9.0/targets/x86_64-linux/include
+#
+OBJPTH= /usr/local/bin/
+LIBSRCPTH = /usr/local/src/libs/
+
+#DSO = 1
+CXX = g++
+OPTIMIZER = -g
+CPPFLAGS = -DBINARY_STREAM -Wno-deprecated
+
+CXXFLAGS= $(OPTIMIZER) $(CXXOPTS) $(INCLUDEDIR) -std=c++11
+ARFLAGS= rs
+#
+INCLUDEDIR =	-I/usr/local/include \
+				-I/usr/local/include/itk \
+				-I/usr/local/include/itk/vnl \
+				-I/usr/local/include/vtk \
+				-I/usr/local/include/gdcm \
+				-I/usr/local/cuda-9.0/targets/x86_64-linux/include
+
+ifdef DSO
+LIB = $(LIBPTH)/Aseglib.so
+else
+LIB = $(LIBPTH)/Aseglib.a
+endif
+

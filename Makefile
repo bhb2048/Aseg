@@ -1,0 +1,403 @@
+#
+#	Makefile for Aseg
+#	
+#	18-nov-11
+#
+#	Modified:
+#	22-apr-14	use src/makeinclude, fixup needed vtk libs
+#	08-jun-17	add SetSeeds.cc
+#	18-nov-17	upgrade for ITK 4.12, VTK 8.0, add ITKTransform-4.12
+#	10-oct-18	upgrade for GPU/OpenCL
+#	11-oct-18	upgrade for ITK 4.13
+#	06-dec-18	upgrade for vtk 8.1
+#!/bin/sh
+include ../makeinclude
+include makeinclude
+
+SOURCES = 	Aseg.cc SegImage3D.cc ImgView.cc MeshView.cc EdgeFilter.cc ThresholdFilter.cc \
+			ImageIntensity.cc  SegmentationDlog.cc \
+			SetBubbles.cc FibrosisHistogram.cc ModelReg.cc
+			
+				
+LIBOBJS = $(SOURCES:.cc=.o)
+
+LIBS =	$(LIB)\
+		$(LIBPTH)/itklib.a \
+		$(LIBPTH)/vtklib.a \
+		$(LIBPTH)/ModelLibFl.a \
+		$(LIBPTH)/mathlib.a \
+		$(LIBPTH)/GLUtilLib.a \
+		$(LIBPTH)/GLUtilLibFl.a \
+		$(LIBPTH)/ItkFltklib.a \
+		$(LIBPTH)/ItkVtklib.a \
+		$(LIBPTH)/PlotlibFl.a \
+		$(LIBPTH)/libUIFl.a \
+		$(LIBPTH)/fltklib.a \
+		$(LIBPTH)/geomlib.a \
+		$(LIBPTH)/recipes.a \
+		$(LIBPTH)/cxlib.a
+
+ITKLIBS = 	-L$(LIBPTH)/itk -litksys-4.13 -lITKCommon-4.13 -lITKIOGDCM-4.13 \
+			-lITKStatistics-4.13 -litkvnl_algo-4.13 -litkv3p_netlib-4.13 -litkvnl-4.13 \
+			-litkvcl-4.13 -lITKIOPNG-4.13 -litkjpeg-4.13 -lITKSpatialObjects-4.13 \
+			-lITKStatistics-4.13 -lITKIOMeta-4.13 -lITKDICOMParser-4.13 -lITKniftiio-4.13 \
+			-lITKEXPAT-4.13 -lITKIOImageBase-4.13 -lITKIOGIPL-4.13 -lITKIOJPEG-4.13 \
+			-lITKIOIPL-4.13 -litkjpeg-4.13 -lITKznz-4.13 -lITKVTK-4.13 \
+			-lITKIOVTK-4.13 -lITKIOSiemens-4.13 -lITKIOTIFF-4.13 -lITKOptimizers-4.13 \
+			-lITKTransform-4.13
+
+GPULIBS = -lITKGPUAnisotropicSmoothing-4.13 -lITKGPUFiniteDifference-4.13 \
+			-lITKGPUThresholding-4.13 -lITKGPUImageFilterBase-4.13 -lITKGPUCommon-4.13
+OCLLIBS = -L/usr/local/cuda-9.0/lib64 $(LIBPTH)/libGPU.a -lOpenCL
+
+VTKLIBS = -L$(LIBPTH)/vtk -lvtkFiltersCore-8.1 -lvtkRenderingCore-8.1 -lvtkIOLegacy-8.1 \
+			-lvtkIOXML-8.1 -lvtkIOImage-8.1 -lvtkImagingGeneral-8.1 \
+			-lvtkCommonExecutionModel-8.1 -lvtkCommonMath-8.1 -lvtkCommonMisc-8.1 \
+			-lvtkCommonTransforms-8.1 -lvtkCommonDataModel-8.1 -lvtkCommonCore-8.1 \
+			-lvtkFiltersGeneral-8.1 -lvtkCommonComputationalGeometry-8.1
+
+XLIBS = -lXcursor -lX11 -lXi -lXinerama -lXft -lpthread -lXext -lXrender -lfontconfig -lfreetype
+LDFLTKGL= -L$(LIBPTH) -lfltk2_gl -lfltk2_images -lfltk2 -lpng -ljpeg
+GDCMLIBS = -L$(LIBPTH)/gdcm -lgdcmCommon -lgdcmDICT -lgdcmDSED -lgdcmIOD -lgdcmMEXD -lgdcmMSFF
+GLLIBS = -lGL -lGLU
+
+LLDLIBS= $(LIBS) $(LDFLTKGL) $(ITKLIBS) $(GDCMLIBS) $(VTKLIBS) $(GPULIBS) $(OCLLIBS) \
+		$(GLLIBS) $(XLIBS) -lm
+
+PROG = Aseg
+
+all: $(PROG)
+
+$(PROG): Aseg.o $(LIBS) sublib
+	$(CXX) $(OPTIMIZER) -o $(OBJPTH)$(PROG) $(LLDLIBS) 
+	@echo DONE!
+
+ifdef DSO
+$(LIB): $(LIB)($(LIBOBJS))
+	$(CXX) $(CXXFLAGS) -shared -o $(LIB) $(LIBOBJS)
+
+else
+$(LIB):	$(LIB)($(LIBOBJS))
+
+endif
+
+$(LIBPTH)/ModelLibFl.a:
+	( cd $(LIBSRCPTH)ModelsFl; make) 
+
+sublib:
+	( cd UI; make)
+	( cd LevelSet; make)
+	( cd Mesh; make)
+	( cd $(LIBSRCPTH)ITK; make) 
+	( cd $(LIBSRCPTH)ModelsFl; make) 
+	( cd $(LIBSRCPTH)PlotlibFl; make) 
+	( cd $(LIBSRCPTH)GLUtilLibFl; make)
+#	( cd $(LIBSRCPTH)geomlib; make)
+#	( cd $(LIBSRCPTH)mathlib; make) 
+
+clean:
+	rm -f $(LIB) *.o UI/*.o LevelSet/*.o Mesh/*.o
+
+
+tidy:
+	rm -f *.o UI/*.o LevelSet/*.o Mesh/*.o
+	
+depend: $(SOURCES)
+	makedepend -I. $(SOURCES) >/dev/null 2>&1
+	( cd UI; make depend)
+	( cd LevelSet; make depend)
+	( cd Mesh; make depend)
+	( cd $(LIBSRCPTH)ITK; make depend) 
+	( cd $(LIBSRCPTH)ModelsFl; make depend) 
+	( cd $(LIBSRCPTH)PlotlibFl; make depend) 
+	( cd $(LIBSRCPTH)GLUtilLibFl; make depend)
+#	( cd $(LIBSRCPTH)geomlib; make depend)
+#	( cd $(LIBSRCPTH)mathlib; make depend) 
+	
+# DO NOT DELETE
+
+Aseg.o: Aseg.h UI/AsegUI.h ImgView.h /usr/include/stdio.h
+Aseg.o: /usr/include/features.h /usr/include/stdc-predef.h
+Aseg.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+Aseg.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+Aseg.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+Aseg.o: /usr/include/_G_config.h /usr/include/wchar.h
+Aseg.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+Aseg.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+Aseg.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+Aseg.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+Aseg.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+Aseg.o: /usr/include/time.h /usr/include/sys/select.h
+Aseg.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+Aseg.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+Aseg.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+Aseg.o: /usr/include/bits/stdlib-float.h MeshView.h /usr/include/GL/gl.h
+Aseg.o: /usr/include/GL/glext.h /usr/include/inttypes.h /usr/include/stdint.h
+Aseg.o: /usr/include/bits/wchar.h Mesh/MeshObject.h SegImage3D.h
+Aseg.o: LevelSet/SegLevelSetDriver.h LevelSet/SegLevelSetFunction.h
+Aseg.o: LevelSet/SegAdvectionFieldImageFilter.h
+Aseg.o: LevelSet/SegAdvectionFieldImageFilter.txx
+Aseg.o: LevelSet/SegLevelSetFunction.txx LevelSet/SegLevelSetDriver.txx
+Aseg.o: LevelSet/SegLevelSetDriver.h LevelSet/SegParameters.h
+Aseg.o: UI/SegParametersUI.h /usr/include/string.h /usr/include/xlocale.h
+Aseg.o: LevelSet/LevelSetExtensionFilter.h Mesh/MeshOptions.h
+Aseg.o: /usr/include/pthread.h /usr/include/sched.h /usr/include/bits/sched.h
+Aseg.o: /usr/include/bits/setjmp.h SegImage3D.h ImgView.h ImageIntensity.h
+Aseg.o: ThresholdFilter.h UI/ThresholdFilterUI.h EdgeFilter.h
+Aseg.o: UI/EdgeFilterUI.h FibrosisHistogram.h UI/FibrosisHistogramUI.h
+Aseg.o: SetBubbles.h UI/SetBubblesUI.h LevelSet/SegParameters.h
+Aseg.o: SegmentationDlog.h UI/SegmentationUI.h ModelReg.h UI/ImgWindowUI.h
+Aseg.o: Aseg.h UI/MeshWindowUI.h UI/AddWallUI.h UI/ColorLabelDlog.h
+Aseg.o: /usr/include/X11/cursorfont.h /usr/include/errno.h
+Aseg.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
+Aseg.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
+Aseg.o: /usr/include/asm-generic/errno-base.h /usr/include/sys/stat.h
+Aseg.o: /usr/include/bits/stat.h /usr/include/unistd.h
+Aseg.o: /usr/include/bits/posix_opt.h /usr/include/bits/environments.h
+Aseg.o: /usr/include/bits/confname.h /usr/include/getopt.h
+Aseg.o: /usr/include/signal.h /usr/include/bits/signum.h
+Aseg.o: /usr/include/bits/siginfo.h /usr/include/bits/sigaction.h
+Aseg.o: /usr/include/bits/sigcontext.h /usr/include/bits/sigstack.h
+Aseg.o: /usr/include/sys/ucontext.h /usr/include/bits/sigthread.h
+Aseg.o: /usr/include/execinfo.h
+SegImage3D.o: SegImage3D.h Mesh/MeshObject.h SegImage3D.h
+SegImage3D.o: LevelSet/SegLevelSetDriver.h LevelSet/SegLevelSetFunction.h
+SegImage3D.o: LevelSet/SegAdvectionFieldImageFilter.h
+SegImage3D.o: LevelSet/SegAdvectionFieldImageFilter.txx
+SegImage3D.o: LevelSet/SegLevelSetFunction.txx LevelSet/SegLevelSetDriver.txx
+SegImage3D.o: LevelSet/SegLevelSetDriver.h LevelSet/SegParameters.h
+SegImage3D.o: UI/SegParametersUI.h /usr/include/string.h
+SegImage3D.o: /usr/include/features.h /usr/include/stdc-predef.h
+SegImage3D.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+SegImage3D.o: /usr/include/gnu/stubs.h /usr/include/xlocale.h
+SegImage3D.o: LevelSet/LevelSetExtensionFilter.h /usr/include/stdlib.h
+SegImage3D.o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
+SegImage3D.o: /usr/include/endian.h /usr/include/bits/endian.h
+SegImage3D.o: /usr/include/bits/byteswap.h /usr/include/bits/types.h
+SegImage3D.o: /usr/include/bits/typesizes.h /usr/include/bits/byteswap-16.h
+SegImage3D.o: /usr/include/sys/types.h /usr/include/time.h
+SegImage3D.o: /usr/include/sys/select.h /usr/include/bits/select.h
+SegImage3D.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
+SegImage3D.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
+SegImage3D.o: /usr/include/alloca.h /usr/include/bits/stdlib-float.h
+SegImage3D.o: /usr/include/math.h /usr/include/bits/huge_val.h
+SegImage3D.o: /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h
+SegImage3D.o: /usr/include/bits/inf.h /usr/include/bits/nan.h
+SegImage3D.o: /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h
+SegImage3D.o: /usr/include/errno.h /usr/include/bits/errno.h
+SegImage3D.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
+SegImage3D.o: /usr/include/asm-generic/errno.h
+SegImage3D.o: /usr/include/asm-generic/errno-base.h /usr/include/assert.h
+ImgView.o: Aseg.h UI/AsegUI.h ImgView.h /usr/include/stdio.h
+ImgView.o: /usr/include/features.h /usr/include/stdc-predef.h
+ImgView.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+ImgView.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+ImgView.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+ImgView.o: /usr/include/_G_config.h /usr/include/wchar.h
+ImgView.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+ImgView.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+ImgView.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+ImgView.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+ImgView.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+ImgView.o: /usr/include/time.h /usr/include/sys/select.h
+ImgView.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+ImgView.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+ImgView.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+ImgView.o: /usr/include/bits/stdlib-float.h MeshView.h /usr/include/GL/gl.h
+ImgView.o: /usr/include/GL/glext.h /usr/include/inttypes.h
+ImgView.o: /usr/include/stdint.h /usr/include/bits/wchar.h Mesh/MeshObject.h
+ImgView.o: SegImage3D.h LevelSet/SegLevelSetDriver.h
+ImgView.o: LevelSet/SegLevelSetFunction.h
+ImgView.o: LevelSet/SegAdvectionFieldImageFilter.h
+ImgView.o: LevelSet/SegAdvectionFieldImageFilter.txx
+ImgView.o: LevelSet/SegLevelSetFunction.txx LevelSet/SegLevelSetDriver.txx
+ImgView.o: LevelSet/SegLevelSetDriver.h LevelSet/SegParameters.h
+ImgView.o: UI/SegParametersUI.h /usr/include/string.h /usr/include/xlocale.h
+ImgView.o: LevelSet/LevelSetExtensionFilter.h Mesh/MeshOptions.h
+ImgView.o: /usr/include/pthread.h /usr/include/sched.h
+ImgView.o: /usr/include/bits/sched.h /usr/include/bits/setjmp.h ImgView.h
+ImgView.o: SetBubbles.h UI/SetBubblesUI.h /usr/include/X11/cursorfont.h
+MeshView.o: MeshView.h Aseg.h UI/AsegUI.h ImgView.h /usr/include/stdio.h
+MeshView.o: /usr/include/features.h /usr/include/stdc-predef.h
+MeshView.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+MeshView.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+MeshView.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+MeshView.o: /usr/include/_G_config.h /usr/include/wchar.h
+MeshView.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+MeshView.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+MeshView.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+MeshView.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+MeshView.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+MeshView.o: /usr/include/time.h /usr/include/sys/select.h
+MeshView.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+MeshView.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+MeshView.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+MeshView.o: /usr/include/bits/stdlib-float.h MeshView.h /usr/include/GL/gl.h
+MeshView.o: /usr/include/GL/glext.h /usr/include/inttypes.h
+MeshView.o: /usr/include/stdint.h /usr/include/bits/wchar.h Mesh/MeshObject.h
+MeshView.o: SegImage3D.h LevelSet/SegLevelSetDriver.h
+MeshView.o: LevelSet/SegLevelSetFunction.h
+MeshView.o: LevelSet/SegAdvectionFieldImageFilter.h
+MeshView.o: LevelSet/SegAdvectionFieldImageFilter.txx
+MeshView.o: LevelSet/SegLevelSetFunction.txx LevelSet/SegLevelSetDriver.txx
+MeshView.o: LevelSet/SegLevelSetDriver.h LevelSet/SegParameters.h
+MeshView.o: UI/SegParametersUI.h /usr/include/string.h /usr/include/xlocale.h
+MeshView.o: LevelSet/LevelSetExtensionFilter.h Mesh/MeshOptions.h
+MeshView.o: /usr/include/pthread.h /usr/include/sched.h
+MeshView.o: /usr/include/bits/sched.h /usr/include/bits/setjmp.h
+MeshView.o: /usr/include/X11/cursorfont.h
+EdgeFilter.o: Aseg.h UI/AsegUI.h ImgView.h /usr/include/stdio.h
+EdgeFilter.o: /usr/include/features.h /usr/include/stdc-predef.h
+EdgeFilter.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+EdgeFilter.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+EdgeFilter.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+EdgeFilter.o: /usr/include/_G_config.h /usr/include/wchar.h
+EdgeFilter.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+EdgeFilter.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+EdgeFilter.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+EdgeFilter.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+EdgeFilter.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+EdgeFilter.o: /usr/include/time.h /usr/include/sys/select.h
+EdgeFilter.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+EdgeFilter.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+EdgeFilter.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+EdgeFilter.o: /usr/include/bits/stdlib-float.h MeshView.h
+EdgeFilter.o: /usr/include/GL/gl.h /usr/include/GL/glext.h
+EdgeFilter.o: /usr/include/inttypes.h /usr/include/stdint.h
+EdgeFilter.o: /usr/include/bits/wchar.h Mesh/MeshObject.h SegImage3D.h
+EdgeFilter.o: LevelSet/SegLevelSetDriver.h LevelSet/SegLevelSetFunction.h
+EdgeFilter.o: LevelSet/SegAdvectionFieldImageFilter.h
+EdgeFilter.o: LevelSet/SegAdvectionFieldImageFilter.txx
+EdgeFilter.o: LevelSet/SegLevelSetFunction.txx LevelSet/SegLevelSetDriver.txx
+EdgeFilter.o: LevelSet/SegLevelSetDriver.h LevelSet/SegParameters.h
+EdgeFilter.o: UI/SegParametersUI.h /usr/include/string.h
+EdgeFilter.o: /usr/include/xlocale.h LevelSet/LevelSetExtensionFilter.h
+EdgeFilter.o: Mesh/MeshOptions.h /usr/include/pthread.h /usr/include/sched.h
+EdgeFilter.o: /usr/include/bits/sched.h /usr/include/bits/setjmp.h
+EdgeFilter.o: EdgeFilter.h UI/EdgeFilterUI.h
+ThresholdFilter.o: ThresholdFilter.h Aseg.h UI/AsegUI.h ImgView.h
+ThresholdFilter.o: /usr/include/stdio.h /usr/include/features.h
+ThresholdFilter.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+ThresholdFilter.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
+ThresholdFilter.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
+ThresholdFilter.o: /usr/include/libio.h /usr/include/_G_config.h
+ThresholdFilter.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
+ThresholdFilter.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
+ThresholdFilter.o: /usr/include/bits/waitflags.h
+ThresholdFilter.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+ThresholdFilter.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+ThresholdFilter.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+ThresholdFilter.o: /usr/include/time.h /usr/include/sys/select.h
+ThresholdFilter.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+ThresholdFilter.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+ThresholdFilter.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+ThresholdFilter.o: /usr/include/bits/stdlib-float.h MeshView.h
+ThresholdFilter.o: /usr/include/GL/gl.h /usr/include/GL/glext.h
+ThresholdFilter.o: /usr/include/inttypes.h /usr/include/stdint.h
+ThresholdFilter.o: /usr/include/bits/wchar.h Mesh/MeshObject.h SegImage3D.h
+ThresholdFilter.o: LevelSet/SegLevelSetDriver.h
+ThresholdFilter.o: LevelSet/SegLevelSetFunction.h
+ThresholdFilter.o: LevelSet/SegAdvectionFieldImageFilter.h
+ThresholdFilter.o: LevelSet/SegAdvectionFieldImageFilter.txx
+ThresholdFilter.o: LevelSet/SegLevelSetFunction.txx
+ThresholdFilter.o: LevelSet/SegLevelSetDriver.txx
+ThresholdFilter.o: LevelSet/SegLevelSetDriver.h LevelSet/SegParameters.h
+ThresholdFilter.o: UI/SegParametersUI.h /usr/include/string.h
+ThresholdFilter.o: /usr/include/xlocale.h LevelSet/LevelSetExtensionFilter.h
+ThresholdFilter.o: Mesh/MeshOptions.h /usr/include/pthread.h
+ThresholdFilter.o: /usr/include/sched.h /usr/include/bits/sched.h
+ThresholdFilter.o: /usr/include/bits/setjmp.h UI/ThresholdFilterUI.h
+ImageIntensity.o: Aseg.h UI/AsegUI.h ImgView.h /usr/include/stdio.h
+ImageIntensity.o: /usr/include/features.h /usr/include/stdc-predef.h
+ImageIntensity.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+ImageIntensity.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+ImageIntensity.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+ImageIntensity.o: /usr/include/_G_config.h /usr/include/wchar.h
+ImageIntensity.o: /usr/include/bits/stdio_lim.h
+ImageIntensity.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
+ImageIntensity.o: /usr/include/bits/waitflags.h
+ImageIntensity.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+ImageIntensity.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+ImageIntensity.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+ImageIntensity.o: /usr/include/time.h /usr/include/sys/select.h
+ImageIntensity.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+ImageIntensity.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+ImageIntensity.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+ImageIntensity.o: /usr/include/bits/stdlib-float.h MeshView.h
+ImageIntensity.o: /usr/include/GL/gl.h /usr/include/GL/glext.h
+ImageIntensity.o: /usr/include/inttypes.h /usr/include/stdint.h
+ImageIntensity.o: /usr/include/bits/wchar.h Mesh/MeshObject.h SegImage3D.h
+ImageIntensity.o: LevelSet/SegLevelSetDriver.h LevelSet/SegLevelSetFunction.h
+ImageIntensity.o: LevelSet/SegAdvectionFieldImageFilter.h
+ImageIntensity.o: LevelSet/SegAdvectionFieldImageFilter.txx
+ImageIntensity.o: LevelSet/SegLevelSetFunction.txx
+ImageIntensity.o: LevelSet/SegLevelSetDriver.txx LevelSet/SegLevelSetDriver.h
+ImageIntensity.o: LevelSet/SegParameters.h UI/SegParametersUI.h
+ImageIntensity.o: /usr/include/string.h /usr/include/xlocale.h
+ImageIntensity.o: LevelSet/LevelSetExtensionFilter.h Mesh/MeshOptions.h
+ImageIntensity.o: /usr/include/pthread.h /usr/include/sched.h
+ImageIntensity.o: /usr/include/bits/sched.h /usr/include/bits/setjmp.h
+ImageIntensity.o: ImageIntensity.h
+SegmentationDlog.o: SegmentationDlog.h UI/SegmentationUI.h Aseg.h UI/AsegUI.h
+SegmentationDlog.o: ImgView.h /usr/include/stdio.h /usr/include/features.h
+SegmentationDlog.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+SegmentationDlog.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
+SegmentationDlog.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
+SegmentationDlog.o: /usr/include/libio.h /usr/include/_G_config.h
+SegmentationDlog.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
+SegmentationDlog.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
+SegmentationDlog.o: /usr/include/bits/waitflags.h
+SegmentationDlog.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+SegmentationDlog.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+SegmentationDlog.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+SegmentationDlog.o: /usr/include/time.h /usr/include/sys/select.h
+SegmentationDlog.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+SegmentationDlog.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+SegmentationDlog.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+SegmentationDlog.o: /usr/include/bits/stdlib-float.h MeshView.h
+SegmentationDlog.o: /usr/include/GL/gl.h /usr/include/GL/glext.h
+SegmentationDlog.o: /usr/include/inttypes.h /usr/include/stdint.h
+SegmentationDlog.o: /usr/include/bits/wchar.h Mesh/MeshObject.h SegImage3D.h
+SegmentationDlog.o: LevelSet/SegLevelSetDriver.h
+SegmentationDlog.o: LevelSet/SegLevelSetFunction.h
+SegmentationDlog.o: LevelSet/SegAdvectionFieldImageFilter.h
+SegmentationDlog.o: LevelSet/SegAdvectionFieldImageFilter.txx
+SegmentationDlog.o: LevelSet/SegLevelSetFunction.txx
+SegmentationDlog.o: LevelSet/SegLevelSetDriver.txx
+SegmentationDlog.o: LevelSet/SegLevelSetDriver.h LevelSet/SegParameters.h
+SegmentationDlog.o: UI/SegParametersUI.h /usr/include/string.h
+SegmentationDlog.o: /usr/include/xlocale.h LevelSet/LevelSetExtensionFilter.h
+SegmentationDlog.o: Mesh/MeshOptions.h /usr/include/pthread.h
+SegmentationDlog.o: /usr/include/sched.h /usr/include/bits/sched.h
+SegmentationDlog.o: /usr/include/bits/setjmp.h
+SetBubbles.o: Aseg.h UI/AsegUI.h ImgView.h /usr/include/stdio.h
+SetBubbles.o: /usr/include/features.h /usr/include/stdc-predef.h
+SetBubbles.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+SetBubbles.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+SetBubbles.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+SetBubbles.o: /usr/include/_G_config.h /usr/include/wchar.h
+SetBubbles.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+SetBubbles.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+SetBubbles.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+SetBubbles.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+SetBubbles.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+SetBubbles.o: /usr/include/time.h /usr/include/sys/select.h
+SetBubbles.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+SetBubbles.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+SetBubbles.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+SetBubbles.o: /usr/include/bits/stdlib-float.h MeshView.h
+SetBubbles.o: /usr/include/GL/gl.h /usr/include/GL/glext.h
+SetBubbles.o: /usr/include/inttypes.h /usr/include/stdint.h
+SetBubbles.o: /usr/include/bits/wchar.h Mesh/MeshObject.h SegImage3D.h
+SetBubbles.o: LevelSet/SegLevelSetDriver.h LevelSet/SegLevelSetFunction.h
+SetBubbles.o: LevelSet/SegAdvectionFieldImageFilter.h
+SetBubbles.o: LevelSet/SegAdvectionFieldImageFilter.txx
+SetBubbles.o: LevelSet/SegLevelSetFunction.txx LevelSet/SegLevelSetDriver.txx
+SetBubbles.o: LevelSet/SegLevelSetDriver.h LevelSet/SegParameters.h
+SetBubbles.o: UI/SegParametersUI.h /usr/include/string.h
+SetBubbles.o: /usr/include/xlocale.h LevelSet/LevelSetExtensionFilter.h
+SetBubbles.o: Mesh/MeshOptions.h /usr/include/pthread.h /usr/include/sched.h
+SetBubbles.o: /usr/include/bits/sched.h /usr/include/bits/setjmp.h
+SetBubbles.o: SetBubbles.h UI/SetBubblesUI.h
+FibrosisHistogram.o: FibrosisHistogram.h UI/FibrosisHistogramUI.h
+ModelReg.o: ModelReg.h

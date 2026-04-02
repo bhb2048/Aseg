@@ -1,0 +1,22 @@
+03-aug-17	Segmentation operation:
+
+From Log 2017-08-03.
+
+Aseg::startSegmentation() starts fltk idle function with SnakeIdleFunction() and
+creates thread with runSegmentation() func.
+
+runSegmentation() thread function calls SegImage3D::RunSegmentation() which calls
+SegLevelSetDriver::Run().
+
+SnakeIdleFunction() calls snakeUpdate() which calls Aseg::updateSegMesh().
+Aseg::updateSegMesh() calls MeshObject *segMesh()->GenerateMesh().
+
+So LevelSet segmentation running in thread and MeshObject::GenerateMesh() called asynchronously from fltk idle in main thread.
+
+No direct connection between MeshObject and SegLevelSetDriver.
+
+MeshObject::GenerateVTKMeshes() calls SegImage3D::GetLevelSetImage() which returns
+SegLevelSetDriver->GetCurrentState() -> m_LevelSetFilter == FiniteDifferenceImageFilter which
+in DoCreateLevelSetFilter() is set to selected segmentation filter.
+
+So mesh repeatedly created from LevelSetFilter state.

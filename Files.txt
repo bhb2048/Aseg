@@ -1,0 +1,56 @@
+02-aug-17	Aseg source files.
+
+Aseg:
+	Aseg.h/cc				main class
+	EdgeFilter.h/cc			superclass EdgeFilterUI
+	FibrosisHistogram.h/cc	superclass FibrosisHistogramUI
+	ImageIntensity.h/cc		superclass UIFL/ImageIntensityUI
+	ImgView.h/cc			2D image display
+	MeshView.h/cc			3D mesh and 3 2D image display
+	ModelReg.h/cc			model to image registration
+	SegImage3D.h/cc			main image class
+	SegmentationDlog.h/cc	superclass SegmentationUI
+	SetBubbles.h/cc			superclass SetBubblesUI
+	SetSeeds.h/cc			superclass SetSeedsUI
+	ThresholdFilter.h/cc	superclass ThresholdFilterUI
+
+LevelSet:
+	LevelSetExtensionFilter.h			used in SegLevelSetDriver as segmentation filter
+										A generic extension of a filter (intended to be a 
+										FiniteDifferenceImageFilter) that let's user control
+										it in a VCR (play-stop-step-rewind) fashion.
+										superclass is segmentation filter, eg. 
+										GeodesicActiveContourLevelSetImageFilter.
+	LevelSetStopAndGoFilter.h/txx		not used, commented #include in SegLevelSetDriver.h
+	SegAdvectionFieldImageFilter.h/txx	used in SegLevelSetFunction
+	SegLevelSetDriver.h/txx				top level set class. Create, run levelset seg filter
+	SegLevelSetFunction.h/txx			difference func, used by PARALLEL_SPARSE_FIELD_SOLVER,
+										DENSE_SOLVER but not currently GEO_ACT_CONT or
+										GEO_ACT_CONT_SHAPE. Added to those 02-aug-17.
+	SegParameters.h/cc					Holds segmentation params
+	SignedDistanceFilter.h/txx			not used. Computes an inside/outside signed distance
+										image given a binary image of the 'inside'.
+	
+Mesh:
+	ImageMeshPipeline.h/cc	used in MeshObject::GenerateVTKMeshes(), employs VTKMeshPipeline
+	LevelSetPipeline.h/cc	used in MeshObject::GenerateVTKMeshes(), employs VTKMeshPipeline
+	MeshObject.h/cc			main mesh class
+	MeshOptions.h/cc		holds mesh options
+	VTKMeshPipeline.h/cc	mesh processing pipeline, employs VTKExporter, VTKImporter
+	
+UI:
+	AddWallUI.fl
+	AsegUI.fl
+	ColorLabelDlog.fl
+	EdgeFilterUI.fl
+	FibrosisHistogramUI.fl
+	ImgWindowUI.fl
+	MeshWindowUI.fl
+	SegmentationUI.fl
+	SegParametersUI.fl
+	SetBubblesUI.fl
+	SetSeedsUI.fl
+	ThresholdFilterUI.fl
+	
+Noel:
+	old area/volume calculation files

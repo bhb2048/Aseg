@@ -1,0 +1,26 @@
+16-oct-12
+
+Things to improve Aseg:
+1. Read more types of DICOM file.
+2. Save/Load walls for multiple times
+3. Add Progress for BubblesOK().
+
+07-apr-15
+-	speed up segmentation init if possible, main problem is SegImage3D::InitalizeSnakeDriver()
+	-> m_LevelSetDriver = new SegLevelSetDriver() -> DoCreateLevelSetFilter() ->
+	m_LevelSetFilter->UpdateLargestPossibleRegion();
+
+17-apr-15
+-	examine use of Aseg::initSegImage()
+
+15-sep-15
+-	test using Sigmoid in EdgePreprocessing
+-	test using EdgePreprocessing instead of InOut for snake
+-	see about incorporating GeoAct as Snake levelset mode.
+
+12-jul-17
+Both GeodesicActiveContourShapePriorLevelSetImageFilter.cxx example and Sticks center the
+input image (origin to center).  Using ChangeInformationImageFilter.
+Currently not doing this.
+!!! Need to try segmentation with & without centering.
+
